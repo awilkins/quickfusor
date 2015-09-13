@@ -8,6 +8,10 @@ This is intended to minimize the usual sources of human error.
 * By eliminating confusing calculations
 * By eliminating confusing panel UI 
 
+## Disclaimer
+
+As if it didn't need saying : this is not a certified medical device. Aside from the fact that there's nothing to control an actual infusion pump, the code lacks the kind of rigour I would expect from a real medical device. In particular it suffers from one of the "hilarious" faults discussed in Thimbleby's lecture where you can use the UI buttons to drop the rate of infusion to a negative value. And if you show it your QR business card it will crash.
+
 ## Inspiration
 
 This project was inspired by [this lecture](http://www.gresham.ac.uk/lectures-and-events/designing-it-to-make-healthcare-safer) by Prof. Harold Thimbleby which arrived in front of my eyes via one of the various healthcare IT channels I read.
