@@ -111,7 +111,7 @@ class Scan:
             # flash screen
             bl.rgb(0,0,0)
             time.sleep(0.2)             
-            bl.rgb(180,180,180)
+            bl.rgb(100,180,100)
             time.sleep(0.2)
             bl.rgb(0,0,0)
             
@@ -166,7 +166,7 @@ class Verify:
         lcd.write("Is this         %s" % self.name)
         lcd.set_cursor_position(0, 2)
         lcd.write("NO           YES")
-        bl.hue(0.15)
+        bl.rgb(30,60,90)
     
     def render(self):
         pass
@@ -197,7 +197,7 @@ class Infusion:
     
     def render_start(self):
         lcd.clear()
-        bl.rgb(0,180,0)
+        bl.rgb(0,100,0)
         
     def render(self):
         self.tick += self.rate
