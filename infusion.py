@@ -12,6 +12,9 @@ import zbar
 
 import Image
 
+import StringIO
+import ConfigParser
+
 CAMERA_REZ = (1027, 768)
 
 def readfile(name):
@@ -22,9 +25,28 @@ def readfile(name):
 WAIT_MESSAGE = readfile("wait.txt")
 MAX_SCANS = 3
 
+class Buttons:
+    def up(self):
+        print("UP")
+    
+    def down(self):
+        print("DOWN")
+    
+    def left(self):
+        print("LEFT")
+    
+    def right(self):
+        print("RIGHT")
+        
+    def button(self):
+        print("BUTTON")
+    
+    def cancel(self):
+        print("CANCEL")
+
 class Wait:
     
-    class ButtonHandler():
+    class ButtonHandler(Buttons):
         def button(self):
             pump.change_state(Scan())
     
@@ -46,7 +68,7 @@ class Wait:
 class Scan:
     'State that scans a QR and gets on with things'
     
-    class ButtonHandler:
+    class ButtonHandler(Buttons):
         
         def __init__(self, parent):
             self.parent = parent
@@ -88,16 +110,30 @@ class Scan:
             self.notfound = False
             # flash screen
             bl.rgb(0,0,0)
-            time.sleep(0.2)
+            time.sleep(0.2)             
             bl.rgb(180,180,180)
             time.sleep(0.2)
             bl.rgb(0,0,0)
             
             # parse data
+            buf = StringIO.StringIO()
+            buf.write("[DEFAULT]\n")
+            buf.write(symbol.data)
+            buf.seek(0)
+            config = ConfigParser.ConfigParser()
+            config.readfp(buf)
+            
+            if config.has_option('DEFAULT', 'PatientName'):
+                self.name = config.get('DEFAULT', 'PatientName')
+            
+            if config.has_option('DEFAULT', 'RatePerMinute'):
+                self.rate = config.getfloat('DEFAULT', 'RatePerMinute')
             
             # start pump
-            
-            pump.change_state(Infusion())
+            if self.name:
+                pump.change_state(Verify(self.name, self.rate))
+            else:
+                pump.change_state(Infusion(self.rate))
         
         if self.notfound and self.count > MAX_SCANS:
             pump.change_state(Wait())
@@ -107,10 +143,38 @@ class Scan:
         bl.rgb(180, 80, 80)
         lcd.write("Scanning....")
     
+class Verify:
+    
+    class ButtonHandler(Buttons):
+        
+        def __init__(self, parent):
+            self.parent = parent
+        
+        def left(self):
+            pump.change_state(Wait())
+        
+        def right(self):
+            pump.change_state(Infusion(self.parent.rate))
+    
+    def __init__(self, name, rate):
+        self.name = name
+        self.rate = rate
+        self.buttons = Verify.ButtonHandler(self)
+
+    def render_start(self):
+        lcd.clear()
+        lcd.write("Is this         %s" % self.name)
+        lcd.set_cursor_position(0, 2)
+        lcd.write("NO           YES")
+        bl.hue(0.15)
+    
+    def render(self):
+        pass
+
 class Infusion:
     'State for when the pump is running'
     
-    class ButtonHandler:
+    class ButtonHandler(Buttons):
         
         def __init__(self, parent):
             self.parent = parent
@@ -125,9 +189,9 @@ class Infusion:
             pump.change_state(Wait())
         
     
-    def __init__(self):
+    def __init__(self, rate):
         self.tick = 0
-        self.rate = 10
+        self.rate = rate
         self.old_rate = -1
         self.buttons = Infusion.ButtonHandler(self)
     
@@ -187,9 +251,19 @@ def handle_button(ch, evt):
 def handle_button(ch, evt):
     pump.current_state.buttons.down()
 
+@b.on(b.LEFT)
+def handle_button(ch, evt):
+    pump.current_state.buttons.left()
+    
+@b.on(b.RIGHT)
+def handle_button(ch, evt):
+    pump.current_state.buttons.right()
+
 @b.on(b.CANCEL)
 def handle_button(ch, evt):
     pump.current_state.buttons.cancel()
+
+
 
 pump = Pump()
 

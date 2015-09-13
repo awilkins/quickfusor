@@ -1,0 +1,6 @@
+[DEFAULT]
+PatientName: Kat
+PatientId: 213456
+InfusionProduct: Potassium Chloride 0.15% and Sodium Chloride 0.9% Infusion 1000ml
+BagVolume: 1000
+RatePerMinute: 20
