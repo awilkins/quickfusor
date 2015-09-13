@@ -20,6 +20,7 @@ def readfile(name):
 
 
 WAIT_MESSAGE = readfile("wait.txt")
+MAX_SCANS = 3
 
 class Wait:
     
@@ -45,69 +46,105 @@ class Wait:
 class Scan:
     'State that scans a QR and gets on with things'
     
+    class ButtonHandler:
+        
+        def __init__(self, parent):
+            self.parent = parent
+        
+        def cancel(self):
+            print('Cancelled    !')
+            parent.notfound = False
+    
+    def __init__(self):
+        self.buttons = Scan.ButtonHandler(self)
+        self.count = 0
+        self.notfound = True
+        
     def render(self):
-        pass
+        snap = io.BytesIO()
+        
+        with picamera.PiCamera() as camera:
+            camera.resolution = CAMERA_REZ
+            camera.start_preview()
+            time.sleep(1)
+            camera.capture(snap, format='jpeg')
+        
+        snap.seek(0)
+        pimage = Image.open(snap).convert('L')
+        
+        scanner = zbar.ImageScanner()
+        scanner.parse_config('enable')
+        
+        width, height = pimage.size
+        raw = pimage.tostring()
+        
+        image = zbar.Image(width, height, 'Y800', raw)
+        
+        scanner.scan(image)
+        
+        self.count += 1
+        
+        for symbol in image:
+            self.notfound = False
+            # flash screen
+            bl.rgb(0,0,0)
+            time.sleep(0.2)
+            bl.rgb(180,180,180)
+            time.sleep(0.2)
+            bl.rgb(0,0,0)
+            
+            # parse data
+            
+            # start pump
+            
+            pump.change_state(Infusion())
+        
+        if self.notfound and self.count > MAX_SCANS:
+            pump.change_state(Wait())
     
     def render_start(self):
         lcd.clear()
         bl.rgb(180, 80, 80)
         lcd.write("Scanning....")
-        
-        notfound = True
-        
-        while notfound:
-            snap = io.BytesIO()
-            
-            with picamera.PiCamera() as camera:
-                camera.resolution = CAMERA_REZ
-                camera.start_preview()
-                time.sleep(1)
-                camera.capture(snap, format='jpeg')
-            
-            snap.seek(0)
-            pimage = Image.open(snap).convert('L')
-            
-            scanner = zbar.ImageScanner()
-            scanner.parse_config('enable')
-            
-            width, height = pimage.size
-            raw = pimage.tostring()
-            
-            image = zbar.Image(width, height, 'Y800', raw)
-            
-            scanner.scan(image)
-            
-            for symbol in image:
-                notfound = False
-                # flash screen
-                bl.rgb(0,0,0)
-                time.sleep(0.2)
-                bl.rgb(180,180,180)
-                time.sleep(0.2)
-                bl.rgb(0,0,0)
-                
-                # parse data
-                
-                # start pump
-                
-                pump.change_state(Infusion())
-        
     
 class Infusion:
     'State for when the pump is running'
     
+    class ButtonHandler:
+        
+        def __init__(self, parent):
+            self.parent = parent
+        
+        def up(self):
+            self.parent.rate += 1
+        
+        def down(self):
+            self.parent.rate -= 1
+        
+        def cancel(self):
+            pump.change_state(Wait())
+        
+    
     def __init__(self):
         self.tick = 0
+        self.rate = 10
+        self.old_rate = -1
+        self.buttons = Infusion.ButtonHandler(self)
     
     def render_start(self):
         lcd.clear()
         bl.rgb(0,180,0)
-        lcd.write("INFUSING STUFF")
         
     def render(self):
-        self.tick += 1
-        self.tick %= 10
-        bl.set_graph(self.tick / 10.0)
+        self.tick += self.rate
+        self.tick %= 100
+        
+        if(self.rate != self.old_rate):
+            lcd.clear()
+            lcd.write("Infusing : %s ml/min" % self.rate)
+            self.old_rate = self.rate
+            
+        bl.set_graph(self.tick / 100.0)
 
 class Broken:
     
@@ -146,6 +183,13 @@ def handle_button(ch, evt):
 def handle_button(ch, evt):
     pump.current_state.buttons.up()
 
+@b.on(b.DOWN)
+def handle_button(ch, evt):
+    pump.current_state.buttons.down()
+
+@b.on(b.CANCEL)
+def handle_button(ch, evt):
+    pump.current_state.buttons.cancel()
 
 pump = Pump()
 
