@@ -1,0 +1,3 @@
+ QuickfusoR 0.1 
+ <+> to scan QR 
+       V
