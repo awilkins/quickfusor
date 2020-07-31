@@ -25,8 +25,9 @@ The software as presented uses the following
 * The Raspberry Pi Camera Module
     * I went for the model with no IR filter, so that an IR lamp can be used to illuminate the QR code in dim light without disturbing patients
 * A [Display-O-Tron HAT](https://shop.pimoroni.com/products/display-o-tron-hat)
-    * While you can get a 320x240 TFT touchscreen for a mere £8 more, many medical appliances have displays which are roughly equivalent to the 16ix3 character LCD on this device
+    * While you can get a 320x240 TFT touchscreen for a mere £8 more, many medical appliances have displays which are roughly equivalent to the 16x3 character LCD on this device
     * It has 6 useful capacitive touch buttons
+    * Programming for a 16x3 text display and 6 buttons is quicker and easier than doing it for a snazzy touchscreen
     * It also has a cool 6-LED bar graph which I thought would make a nice infusion rate throbber! (it does)
 
 ## Software
@@ -42,7 +43,7 @@ The former was written in C# by my collaborator Kat Hobdell, the latter in Pytho
 
 The QR code data essentially takes the format of a Python configuration file, without the leading section header. This is open to revision, a simple format has been selected to try and keep QR size down and make for easy parsing (with the standard Python config library).
 
-Possibly the fiddliest part was writing the code to recognise QR codes on the Pi. All the available examples spawn UI to the X11 server and use a camera at /dev/video0 ; this project has no "real" screen so no X11, and the Pi camera module doesn't get a device at /dev/video0. I think there is scope for an improvement ni the QR recognition as the underlying library supports real-time recognition from streams ; presently it uses a snapshot which means you have to hold the code reasonably still at an appropriate distance from the camera (in good light).
+Possibly the fiddliest part was writing the code to recognise QR codes on the Pi. All the available examples spawn UI to the X11 server and use a camera at /dev/video0 ; this project has no "real" screen so no X11, and the Pi camera module doesn't get a device at /dev/video0. I think there is scope for an improvement in the QR recognition as the underlying library supports real-time recognition from streams ; presently it uses a snapshot which means you have to hold the code reasonably still at an appropriate distance from the camera (in good light).
 
 ### Pump UI
 

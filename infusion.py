@@ -16,6 +16,9 @@ import StringIO
 import ConfigParser
 
 CAMERA_REZ = (1027, 768)
+PATIENT_NAME = "patient"
+INFUSION_RATE = "rate"
+VOLUME = "volume"
 
 def readfile(name):
     with open(name) as f:
@@ -123,11 +126,10 @@ class Scan:
             config = ConfigParser.ConfigParser()
             config.readfp(buf)
             
-            if config.has_option('DEFAULT', 'PatientName'):
-                self.name = config.get('DEFAULT', 'PatientName')
-            
-            if config.has_option('DEFAULT', 'RatePerMinute'):
-                self.rate = config.getfloat('DEFAULT', 'RatePerMinute')
+            if config.has_option('DEFAULT', PATIENT_NAME):
+                self.name = config.get('DEFAULT', PATIENT_NAME)            
+            if config.has_option('DEFAULT', INFUSION_RATE):
+                self.rate = config.getfloat('DEFAULT', INFUSION_RATE)
             
             # start pump
             if self.name:

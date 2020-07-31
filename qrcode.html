@@ -1,0 +1,27 @@
+<html>
+    <head>
+        <script type="text/javascript" src="qrcode.js"></script>
+    </head>
+    <body>
+        <div id="qrcode"></div>
+        <div id="qrdata" style="display: none;">
+
+PatientName: Kat
+PatientId: 213456
+InfusionProduct: Potassium Chloride 0.15% and Sodium Chloride 0.9% Infusion 1000ml
+BagVolume: 1000
+RatePerMinute: 20cb2
+
+        </div>
+        <script type="text/javascript">
+        var qrcode = new QRCode("qrcode", {
+           text: document.getElementById("qrdata").textContent.trim(),
+           width: 256,
+           height: 256,
+           colorDark: "#000000",
+           colorLight: "#ffffff",
+           correctLevel: QRCode.CorrectLevel.H
+        });
+        </script>        
+    </body>
+</html>
